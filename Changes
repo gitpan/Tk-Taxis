@@ -1,0 +1,25 @@
+Revision history for Perl extension Tk::Taxis.
+
+0.01  Mon Jul 28 18:21:50 2003
+	- original version; created by h2xs 1.22 with options
+		-AXn Tk::Taxis
+
+1.00  Mon Aug  4 19:28:20 2003
+	- First released version, all basic functionality implemented such that
+	  woodlice script ran without memory leaks
+
+1.01  Tue Aug  5 10:28:50 2003
+	- Updated POD
+	- Fixed bug in image size allocation in Tk::Taxis::Critter
+	- Made images configurable and moved woodlice into subdirectory
+	- Made width and height configurable, and mended return values for cget
+	- Add logging to woodlice.pl
+	- Added tests
+
+1.02 Thu Aug 28 09:39:25 2003
+	- Updated POD
+	- Fixed Delegate bug in Tk::Taxis
+	
+1.03 Fri Aug 29 13:11:13 2003
+	- Updated POD
+	- Made left and right fill colours in Tk::Taxis configurable
