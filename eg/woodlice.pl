@@ -11,8 +11,9 @@ if ( $ARGV[0] && $ARGV[0] =~ /^-{1,2}(h|help|\?)$/i )
 	exit( 0 );
 }
 
-use Tk qw( DoOneEvent DONT_WAIT ALL_EVENTS );
+use Tk qw( DONT_WAIT DoOneEvent );
 use Tk::Taxis;
+use Time::HiRes;
 
 ########################## defaults and bindings  ##############################
 
@@ -22,16 +23,22 @@ use constant POPULATION => 10;
 use constant PREFERENCE => 100;
 use constant CRITTERS   => "woodlice";
 use constant COLOUR     => '#8445e3'; # dddddd is quite nice too
+use constant SPEED      => 0.006;
+use constant REFRESH    => 20; # milliseconds between refreshes
+
 my $running    = 0;
 my $counter    = 0;
 my $paused     = 0;
 my $first_time = 0;
+
 my $preference = PREFERENCE;
 my $population = POPULATION;
 my $critters   = CRITTERS;
 my $colour     = COLOUR;
 my $vert       = VERT;
 my $horiz      = HORIZ;
+my $speed      = SPEED;
+my $refresh    = REFRESH;
 
 use Getopt::Long;
 GetOptions
@@ -40,8 +47,11 @@ GetOptions
 	"vert=i"     => \$vert,
 	"horiz=i"    => \$horiz,
 	"image=s"    => \$critters,
+	"refresh=i"  => \$refresh,
+	"speed=f"    => \$speed,
 );
-$colour = "#$colour" unless $colour =~ /^#/;
+
+$refresh /= 1000; # Time::HiRes need seconds, not milliseconds
 
 use File::Temp 'tempfile';
 use File::Spec;
@@ -56,8 +66,8 @@ my $logfile = tempfile
 my $log_number = 1;
 
 my $mw = new MainWindow( -title => "Woodlouse simulation" );
-$mw->Tk::bind( '<Alt-F4>'     => [ sub { exit 0 } ] );
-$mw->Tk::bind( '<Control-F4>' => [ sub { exit 0 } ] );
+$mw->Tk::bind( '<Alt-F4>'     => [ sub { Tk::exit 0 } ] );
+$mw->Tk::bind( '<Control-F4>' => [ sub { Tk::exit 0 } ] );
 $mw->Tk::bind( '<Control-s>'  => \&start_toggle );
 $mw->Tk::bind( '<Control-p>'  => \&pause_toggle );
 $mw->Tk::bind( '<F1>'         => \&help );
@@ -87,7 +97,7 @@ $mw->setPalette( $colour );
 				-label     => 'Exit',
 				-font      => 'sserife 8',
 				-underline => 1,
-				-command   => [ sub { exit(0) } ],
+				-command   => [ sub { Tk::exit(0) } ],
 			);
 		my $simulate = $menu->cascade
 		(
@@ -160,6 +170,7 @@ $mw->setPalette( $colour );
 			-preference => $preference,
 			-population => $population,
 			-images     => $critters,
+			-speed      => $speed,
 		)
 		->pack();
 		my $frame = $main->Frame
@@ -272,14 +283,18 @@ $mw->repeat
 	] 
 );
 
-while ( 1 )
+while( 1 )
 {
-	DoOneEvent( $running ? DONT_WAIT : ALL_EVENTS );
+	my $finish = $refresh + Time::HiRes::time;
 	$taxis->taxis() if $running && not $paused;
 	$timer->configure( -text => sprintf "Time (s): %u", $counter );
 	my ( $left, $right ) = $taxis->cget( -population );
-	$left_count->configure(  -text => "Left: $left"   );
-	$right_count->configure( -text => "Right: $right" );
+	$left_count->configure(  -text => "Light: $left"   );
+	$right_count->configure( -text => "Dark: $right" );
+	while ( Time::HiRes::time < $finish  )
+	{ 
+		DoOneEvent( DONT_WAIT );
+	}
 }
 
 ################################### toggles ####################################
@@ -409,7 +424,7 @@ veer away from the dark!
 
 
 A log is kept of the current option settings and the number of critters on the 
-left and right sides, every second. This can be saved using 'Save log file' on 
+light and dark sides, every second. This can be saved using 'Save log file' on 
 'File' toolbar when the simulation is stopped.
 
 
@@ -700,7 +715,7 @@ sub new_log
 Woodlouse simulator log file
 Population\t$population
 Preference\t$preference
-Time\tLeft\tRight
+Time\tLight\tDark
 THIS
 }
 
@@ -712,26 +727,40 @@ woodlice.pl - Perl script for running woodlouse simulator
 
 =head1 SYNOPSIS
 
-  perl woodlice.pl [-colour #eeeeee -horiz 400 -vert 400 -image bacteria]
+  perl woodlice.pl 
+    [-colour blue] 
+    [-horiz 400] 
+    [-vert 400] 
+    [-image bacteria] 
+    [-speed 0.006]
+    [-refresh 50]  
 
 =head1 ABSTRACT
 
-Woodlouse simulator
+Woodlouse simulation script
 
 =head1 DESCRIPTION
 
-Invokes woodloue simulation demo using C<Tk::Taxis> and C<Tk::Taxis::Critter>.
-Press F1 whilst executing for help. The C<colour>, C<horiz>(ontal) C<vert>(ical)
-and critter C<image> can be configured from the command line with the 
-appropriate switches.
+Invokes a woodlouse simulation demo using C<Tk::Taxis> and 
+C<Tk::Taxis::Critter>. Press F1 whilst executing for help. The C<colour> scheme
+of the simulator, the C<horiz>(ontal) and C<vert>(ical) size of the arena,
+the critter C<image>s used, and the C<speed> and minimum C<refresh> rate 
+(milliseconds between refreshes) can be configured from the command line with 
+the appropriate switches. 
+
+The simulation allows you to run up to fifty woodlouse critters in a light/dark
+choice chamber, print results to a log file, configure the lice's preference
+for the dark side, I<etc>. It was designed (as was the whole distribution) to
+teach school-children about the preference of woodlice for the dark, without
+having to collect two thousand woodlice from the school grounds. I hope some
+biologists or teachers out there may also find it saves getting your hands dirty
+rooting around under rocks.
 
 =head1 SEE ALSO
 
-L<perl>
+L<Tk::Taxis>
 
-C<Tk::Taxis>
-
-C<Tk::Taxis::Critter>
+L<Tk::Taxis::Critter>
 
 =head1 AUTHOR
 

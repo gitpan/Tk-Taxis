@@ -6,7 +6,7 @@ use warnings::register;
 
 use Carp;
 
-our $VERSION = '1.03';
+our $VERSION = '1.04';
 
 ################################## defaults ####################################
 
@@ -434,14 +434,14 @@ Simulates the biological movement called taxis
 
 =head1 DESCRIPTION
 
-Organisms such as bacteria respond to gradients in chemicals, light, I<etc> by a
-process called taxis ('movement'). This module captures some of the spirit of 
+Organisms such as bacteria respond to gradients in chemicals, light, I<etc>, by 
+a process called taxis ('movement'). This module captures some of the spirit of 
 this model of organismal movement. Bacteria are unable to measure differential
 gradients of chemicals along the length of their cells. Instead, they measure
 the concentration at a given point, move a little, measure it again, then if
-they are running B<up> a concentration gradient, they reduce their 'tumbling
-frequency' (the probability that they will randomly change direction). In this
-way, they effect a random walk that is biased B<up> the gradient. 
+they find they are running B<up> a concentration gradient, they reduce their 
+tumbling frequency (the probability that they will randomly change direction). 
+In this way, they effect a random walk that is biased up the gradient. 
 
 =head2 METHODS
 
@@ -451,14 +451,15 @@ call it in the usual way...
   my $taxis = $mw->Taxis( -option => value )->pack();
   $taxis->configure ( -option => value );
   my $number = $taxis->cget( -option );
-  
+
 or similar. This widget is a composite, based on Frame and inplementing a 
 Canvas. Configurable options are mostly forwarded to the Canvas subwidget, which
 be directly accessed by the C<Subwidget('canvas')> method. Options specific to
 the C<Tk::Taxis> widget are listed below. If you try to pass in values too low 
-or high (as specified below), the module will carp (if warnings are enabled ) 
-and use a default minimum or maximum instead. These options can be set in 
-the constructor, and get/set by the standard C<cget> and C<configure> methods.
+or high (as specified below), the module will C<carp> (if C<warnings> are 
+enabled) and use a default minimum or maximum instead. These options can be set 
+in the constructor, and get/set by the standard C<cget> and C<configure> 
+methods.
 
 =over 4
 
@@ -492,12 +493,12 @@ how negative taxis is achieved). Defaults to 100.
 =item * C<-speed>
 
 This sets the speed of the critters. When the critters are moved, the run length
-is essentially set to rand( width_of_canvas ) * speed * cos rotation. If there
-is no rotation, the maximum run length will be simply be the width of the canvas
-multiplied by the speed. If you try to set a speed lower than 2 / 
-width_of_canvas, it will be ignored, and this mimimum value will be used instead
-otherwise your critters, moving a fractional number of pixels, will sit there
-and spin like tops. Defaults to 0.006.
+is essentially set to C<rand( width_of_canvas ) * speed * cos rotation>. If 
+there is no rotation, the maximum run length will be simply be the width of the 
+canvas multiplied by the speed. If you try to set a speed lower than C<2 / 
+width_of_canvas>, it will be ignored, and this mimimum value will be used 
+instead otherwise your critters, moving a fractional number of pixels, will sit 
+there and spin like tops. Defaults to 0.006.
 
 =item * C<-population>
 
@@ -514,9 +515,9 @@ to display as critters. If this begins with an C<@> sign, this will be taken to
 be a real path. Otherwise, it will be taken to be a default image set. This may
 currently be 'woodlice' or 'bacteria' (these images are located in directories 
 of the same name in C<@INC/Tk/Taxis/images/>). There must be eight images, named 
-n.gif, ne.gif, e.gif, se.gif, s.gif, sw.gif, w.gif and nw.gif, each showing the 
-critter in a different orientation (n being vertical, e being pointing to the 
-right, I<etc>.  Defaults to 'woodlice'.
+C<n.gif>, C<ne.gif>, C<e.gif>, C<se.gif>, C<s.gif>, C<sw.gif>, C<w.gif> and 
+C<nw.gif>, each showing the critter in a different orientation (n being 
+vertical, e being pointing to the right, I<etc>).  Defaults to 'woodlice'.
 
 =item * C<-left_fill>
 
@@ -535,7 +536,7 @@ one additional public method...
 
 =over 4
 
-=item * taxis()
+=item * C<taxis()>
 
 This executes one cycle of the taxis simulation. Embed calls to this in a 
 C<while> loop to run the simulation. See the script C<eg/woodlice.pl> for an 
@@ -559,26 +560,35 @@ module.
 
 Those used to writing...
 
-  C<MainLoop()>
+  MainLoop();
 
 in every C<Tk> script should note that because the simulation requires its 
-B<own> event loop within the event loop of the main program, this will not work.
-You need to roll your own event loop. The bits you will need are...
+B<own> event loop I<within> the event loop of the main program, this will not 
+work out of the box. The best solution I have found is this...
 
   # import some semantics 
-  use Tk qw( DoOneEvent DONT_WAIT ALL_EVENTS );
+  use Tk qw( DoOneEvent DONT_WAIT );
   use Tk::Taxis;
+  use Time::HiRes;
   my $mw = new MainWindow;
-  my $taxis = $mw->Taxis();
-  
-  # this tells us whether we should be running the simulation or not
+  my $taxis = $mw->Taxis()->pack();
+
+  # this tells us whether we are running the simulation or not
   my $running = 1;
+  
+  # minimum refresh rate
+  my $refresh = 0.02; # 20 ms
   
   # home-rolled event loop
   while ( 1 )
   {
-    DoOneEvent( $running ? DONT_WAIT : ALL_EVENTS );
-    $taxis->taxis() if $running; # one round of taxis if we're running
+    my $finish = $refresh + Time::HiRes::time;
+    $taxis->taxis() if $running;
+    while ( Time::HiRes::time < $finish  )
+      # take up some slack time if the loop executes very quickly
+    { 
+      DoOneEvent( DONT_WAIT );
+    }
   }
   
   # arrange for a start/stop Button or similar to invoke this callback
@@ -587,18 +597,15 @@ You need to roll your own event loop. The bits you will need are...
   	$running = $running ? 0 : 1;
   }
 
-A more fleshed out version can be found in the example C<woodlice.pl> script.
-
 As every call to C<taxis> involves iterating over the entire population, when 
 that population is small, the iterations occur more quickly than when the 
-population is large. Scripts using the module should therefore either (a) not 
-care if the critters whizz around quicker when the population is smaller, or (b)
-take steps to call C<taxis> at some fixed interval, rather than in a simple
-event loop as shown above.
+population is large. This event loop ensures that small populations do not
+whizz around madly (as would be the case if we used a simple C<while> loop), 
+whilst ensuring that large populations do not cause the script to hang in deep
+recursion (as would be the case if we used a timed C<repeat> callback and a
+default C<MainLoop()>).
 
 =head1 SEE ALSO
-
-L<perl>
 
 L<Tk::Taxis::Critter>
 

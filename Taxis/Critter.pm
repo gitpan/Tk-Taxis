@@ -4,7 +4,7 @@ use 5.008;
 use strict;
 use warnings::register();
 
-our $VERSION = '1.02';
+our $VERSION = '1.04';
 
 use constant PI => 4 * atan2( 1, 1 );
 
@@ -186,21 +186,21 @@ Simulates critters in a taxis object
 =head1 DESCRIPTION
 
 This module is used by the C<Tk:::Taxis> class to implement the critter objects
-in its taxis simulation. It requires the use of an object with the same 
-interface as C<Tk::Taxis> to work, namely one supporting C<width>, C<height>,
-C<image_width> and C<image_height> methods.
+in its taxis simulation. Classes using it require the same interface as 
+C<Tk::Taxis> to work, namely one supporting C<width>, C<height>, C<image_width>,
+C<image_height>, C<tumble>, C<preference> and C<speed> methods.
 
 =head1 METHODS
 
 =over 4
 
-=item * C<new( -taxis => $taxis )>
+=item * C<new( -taxis =E<gt> $taxis )>
 
-Generates a new C<Critter> object. Must be passed the C<-taxis> option and
-object. This object should be a C<Tk::Taxis> object or one implementing the 
-methods C<width>, C<height>, C<image_width>, C<image_height>, C<tumble>, 
-C<preference> and C<speed>. The module will C<croak> unless it receives this 
-object in its constructor's arguments.
+Generates a new C<Tk::Taxis::Critter> object. Must be passed the C<-taxis> 
+option and object. This object should be a C<Tk::Taxis> object or one 
+implementing the methods C<width>, C<height>, C<image_width>, C<image_height>, 
+C<tumble>, C<preference> and C<speed>. The module will C<croak> unless it 
+receives this object in its constructor's arguments.
 
 =item * C<randomise>
 
@@ -210,35 +210,34 @@ Randomises the positions of the critters.
 
 Moves each critter through one cycle of run-and-tumble.
 
-=item * C<get_pos> C<set_pos>
+=item * C<get_pos> and C<set_pos>
 
 Gets the position of the critter. Returns a two item list of x, y coordinates). 
 The C<set_pos> sets the critters position, and expects a two item list.
 
-=item * C<get_orient> C<set_orient>
+=item * C<get_orient> and C<set_orient>
 
 Gets the orientation of the critter: returns a string: either 'n', 'ne', 'e',
 'se', 's', 'sw', 'w', or 'nw'. The C<set_orient> method can also be called with 
 no argument: the orientation will be set automatically from internal data.
 
-=item * C<get_id> C<set_id>
+=item * C<get_id> and C<set_id>
 
 Gets or sets the canvas ID of the critter. Returns this integer.
 
 =item * C<get_boundries>
 
 Gets a hash of numbers describing the area in which the critters may move. The
-keys are min_x, max_x, min_y, max_y, width and height. The width and height are 
-the physical dimensions of the taxis canvas (as specified by the object passed
-to the constructor), the min and max values take into account the size of the 
-critters' images: min_x will be 5px if the critter images are 10px wide, since 
-objects cannot be squashed any closer to the edges of the canvas than this.
+keys are C<min_x>, C<max_x>, C<min_y>, C<max_y>, C<width> and C<height>. 
+The width and height are the physical dimensions of the taxis canvas (as 
+specified by the object passed to the constructor), the min and max values take 
+into account the size of the critters' images: C<min_x> will be 5px if the 
+critter images are 10px wide, since objects cannot be squashed any closer to the
+ edges of the canvas than this.
 
 =back
 
 =head1 SEE ALSO
-
-L<perl>
 
 L<Tk::Taxis>
 
