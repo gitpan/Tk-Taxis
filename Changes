@@ -27,3 +27,8 @@ Revision history for Perl extension Tk::Taxis.
 	- Fixed numerous typos
 	- Changed event loop in woodlice.pl so it didn't run insanely fast for small
 	  populations
+
+1.05 Fri Oct 17 10:32:07 2003
+	- Improvements to simulator script: dry/wet option, scalable GUI settings,
+	  disable option for preference slider
+	- Changed stochastic test in 1.t

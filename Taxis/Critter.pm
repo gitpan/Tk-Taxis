@@ -4,7 +4,7 @@ use 5.008;
 use strict;
 use warnings::register();
 
-our $VERSION = '1.04';
+our $VERSION = '1.05';
 
 use constant PI => 4 * atan2( 1, 1 );
 
