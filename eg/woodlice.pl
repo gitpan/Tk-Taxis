@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 
-# woodlice.pl v2.01
+# woodlice.pl v2.02
 
 use strict;
 use warnings;
@@ -762,8 +762,7 @@ sub dialog
 sub about
 {
 	my $about_text = << "THIS";
-Woodlouse Simulator (CASE 19) v2.01 © Dr. Cook 2003\n
-Written originally for the Ellen Wilkinson School, Ealing\n
+Woodlouse Simulator (CASE 19) v2.02 © Dr. Cook 2003\n
 This is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 THIS
 	dialog( $about_text, "About" );

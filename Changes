@@ -37,12 +37,16 @@ Revision history for Perl extension Tk::Taxis.
 	- New internals for Tk::Critter and Tk::Taxis to allow a 2D choice chamber
 	- Changes to API for 2D selection, all but population backward compatible.
 	  Calls to population now return a hash in list context, not a two item list
+	- left_fill and right_fill deprecated
 	- Removed preference slider from simulator
 	- Allows users to enter their own tumble calculation code 
 	- Complete overhaul of simulator script: dry/damp can be combined with 
 	  dark/light option
 	- Many more tests
 
-Fri Dec 19 17:47:03 2003
-	- Minor warnings bug fixes discovered when running under 5.8.2. 
+2.01 Fri Dec 19 17:47:03 2003
+	- Warnings bug fixes, discovered when running under 5.8.2. 
+
+2.02 Sun Dec 21 11:15:05 2003
+	- Minor test bug fixes discovered when running under 5.8.1. 
 	

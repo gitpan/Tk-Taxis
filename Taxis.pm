@@ -4,7 +4,7 @@ use 5.008;
 use strict;
 use warnings::register( 'Tk::Taxis' );
 
-our $VERSION = '2.01';
+our $VERSION = '2.02';
 
 ################################## defaults ####################################
 
