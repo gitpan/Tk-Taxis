@@ -4,7 +4,7 @@ use 5.008;
 use strict;
 use warnings::register( 'Tk::Taxis' );
 
-our $VERSION = '2.00';
+our $VERSION = '2.01';
 
 ################################## defaults ####################################
 
@@ -132,13 +132,13 @@ sub _find_image
 	if ( my ( $path ) = $dir =~ /^\@(.*)$/ )
 	{
 		$found = ( grep { -e $_ } "$path/$file" )[ 0 ];
-		warnings::carp "No such file $path/$file" unless $found;
+		warnings::warn( "No such file $path/$file" ) unless $found;
 	}
 	else
 	{
 		$found = 
 		   ( grep { -f $_ } map { "$_/Tk/Taxis/images/$dir/$file" } @INC )[ 0 ];
-		warnings::carp "No such file \@INC/Tk/Taxis/images/$dir/$file"
+		warnings::warn( "No such file \@INC/Tk/Taxis/images/$dir/$file" )
 			unless $found;
 	}
 	return $found;
@@ -207,14 +207,14 @@ sub preference
 	my ( $taxis, $preference ) = @_;
 	if ( defined $preference )
 	{
-		$preference = [ $preference ] unless ref $preference eq 'ARRAY';
+		$preference = [ $preference ] unless ref $preference;
 		for my $i ( 0 .. 1 )
 		{
 			if ( defined $preference->[ $i ] )
 			{
 				if ( abs $preference->[ $i ] < 1 )
 				{
-					warnings::carp "Absolute value of preference must be greater than 1";
+					warnings::warn( "Absolute value of preference must be greater than 1" );
 					${ $preference }[ $i ] = 1;
 				}
 			}
@@ -235,12 +235,12 @@ sub tumble
 	{	
 		if ( $tumble > 1 )
 		{
-			warnings::carp "Tumble value too high, setting to 1";
+			warnings::warn( "Tumble value too high, setting to 1" );
 			$tumble = 1;
 		}
 		elsif ( $tumble < 0 )
 		{
-			warnings::carp "Tumble value too low, setting to 0";
+			warnings::warn( "Tumble value too low, setting to 0" );
 			$tumble = 0;
 		}
 		$taxis->{ tumble } = $tumble;
@@ -259,7 +259,7 @@ sub speed
 		my $min_speed = 2 / sqrt ( $max_x**2 + $max_y**2 );
 		if ( $speed < $min_speed )
 		{
-			warnings::carp "Speed too low, setting to minimum value of $min_speed";
+			warnings::warn( "Speed too low, setting to minimum value of $min_speed" );
 			$speed = $min_speed;
 				# or they sit there and spin
 		}
@@ -379,25 +379,25 @@ sub fill
 	my ( $taxis, $fill ) = @_;
 	if ( defined $fill )
 	{
-		if ( ref $fill ne 'ARRAY' )
+		if ( not ref $fill )
 		{
 			$taxis->{ fill } = [ [ $fill, $fill ], [ $fill, $fill ] ];
 		}
-		elsif ( ref $fill eq 'ARRAY' && 
+		elsif ( ref $fill && 
 				( not ref $fill->[0] ) && 
 					( not ref $fill->[1] ) )
 		{
 			$taxis->{ fill } = [ [ $fill->[0], $fill->[1] ], 
 			                     [ $fill->[0], $fill->[1] ] ];
 		}
-		elsif ( ref $fill->[0] eq 'ARRAY' && ref $fill->[1] eq 'ARRAY' )
+		elsif ( ref $fill->[0] && ref $fill->[1] )
 		{
 			$taxis->{ fill } = [ [ $fill->[0][0], $fill->[0][1] ], 
 			                     [ $fill->[1][0], $fill->[1][1] ] ];			
 		}
 		else
 		{
-			warnings::carp "Invalid argument to fill";
+			warnings::warn( "Invalid argument to fill" );
 			return;
 		}
 		$taxis->refresh();
@@ -410,7 +410,7 @@ sub left_fill
 	my ( $taxis, $left_fill ) = @_;
 	if ( $left_fill )
 	{
-		warnings::carp( "left_fill is deprecated, use fill instead" );
+		warnings::warn( "left_fill is deprecated, use fill instead" );
 		$taxis->{ fill }[0][0] = $left_fill;
 		$taxis->{ fill }[1][0] = $left_fill;
 		$taxis->refresh();
@@ -423,7 +423,7 @@ sub right_fill
 	my ( $taxis, $right_fill ) = @_;
 	if ( $right_fill )
 	{
-		warnings::carp "right_fill is deprecated, use fill instead";
+		warnings::warn( "right_fill is deprecated, use fill instead" );
 		$taxis->{ fill }[0][1] = $right_fill;
 		$taxis->{ fill }[1][1] = $right_fill;
 		$taxis->refresh();
@@ -557,7 +557,7 @@ or similar. This widget is based on Frame and implements a Canvas. Configurable
 options are mostly forwarded to the Canvas subwidget, which be directly accessed
 by the C<Subwidget('canvas')> method. Options specific to the C<Tk::Taxis> 
 widget are listed below. If you try to pass in values too low or high (as 
-specified below), the module will C<carp> and set a default minimum or maximum 
+specified below), the module will C<warn> and set a default minimum or maximum 
 instead. These options can be set in the constructor, and get/set by the 
 standard C<cget> and C<configure> methods.
 
@@ -751,9 +751,6 @@ whizz around madly (as would be the case if we used a simple C<while> loop),
 whilst ensuring that large populations do not cause the script to hang in deep
 recursion (as would be the case if we used a timed C<repeat> callback and a
 default C<MainLoop()>).
-
-C<Tk> doesn't play nicely with C<warnings>, so warnings from this module cannot 
-be disabled with C<no warnings>.
 
 =head1 SEE ALSO
 

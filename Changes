@@ -42,3 +42,7 @@ Revision history for Perl extension Tk::Taxis.
 	- Complete overhaul of simulator script: dry/damp can be combined with 
 	  dark/light option
 	- Many more tests
+
+Fri Dec 19 17:47:03 2003
+	- Minor warnings bug fixes discovered when running under 5.8.2. 
+	

@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 
-# woodlice.pl v2.00
+# woodlice.pl v2.01
 
 use strict;
 use warnings;
@@ -762,7 +762,7 @@ sub dialog
 sub about
 {
 	my $about_text = << "THIS";
-Woodlouse Simulator (CASE 19) v2.0 © Dr. Cook 2003\n
+Woodlouse Simulator (CASE 19) v2.01 © Dr. Cook 2003\n
 Written originally for the Ellen Wilkinson School, Ealing\n
 This is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 THIS
@@ -849,8 +849,7 @@ C<Tk::Taxis::Critter>. Press F1 whilst executing for help. The C<foreground>
 colour scheme of the simulator, the C<background> colouring, C<horiz>(ontal) 
 and C<vert>(ical) size of the arena, the critter C<image>s used, and 
 the C<speed> and minimum C<refresh> rate (milliseconds between refreshes) can be
-configured from the command line with the appropriate switches. The 'preference' 
-option slider can also be C<disabled> from the command line.
+configured from the command line with the appropriate switches.
 
 The simulation allows you to run up to fifty woodlouse critters in a light/dark
 choice chamber, print results to a log file, simulate woodlice's preference for

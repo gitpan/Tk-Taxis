@@ -4,7 +4,7 @@ use 5.008;
 use strict;
 use warnings::register;
 
-our $VERSION = '2.00';
+our $VERSION = '2.01';
 
 use constant PI => 4 * atan2( 1, 1 );
 
@@ -13,7 +13,7 @@ sub new
 	my ( $class, %options ) = @_;
 	my $critter = { };
 	$critter->{ taxis } = $options{ -taxis };
-	warnings::croak "Can't create critter without -taxis option" 
+	die( "Can't create critter without -taxis option" )
 		unless ref $critter->{ taxis };
 	bless $critter, $class;
 	$critter->randomise();
@@ -23,9 +23,9 @@ sub new
 sub get_boundries
 {
 	my ( $critter ) = @_;
-	my $min_x   = $critter->{ width } / 2;
+	my $min_x   = $critter->{ taxis }{ image_width } / 2;
 	my $max_x   = $critter->{ taxis }->width() - $min_x;
-	my $min_y   = $critter->{ height } / 2;
+	my $min_y   = $critter->{ taxis }{ image_height } / 2;
 	my $max_y   = $critter->{ taxis }->height() - $min_y;	
 	my $width   = $critter->{ taxis }->width();
 	my $height  = $critter->{ taxis }->height();
