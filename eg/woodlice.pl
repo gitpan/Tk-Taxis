@@ -1,6 +1,6 @@
 #!/usr/bin/perl 
 
-# woodlice.pl v1.05
+# woodlice.pl v2.00
 
 use strict;
 use warnings;
@@ -17,45 +17,67 @@ use Time::HiRes;
 
 ############################### global state ###################################
 
-my $running      = 0;         # is the simulation running?
-my $counter      = 0;         # seconds since simulation was started
-my $paused       = 0;         # is the simulation paused?
-my $need_reset   = 1;         # do the critters need repositioning?
-my $disabled     = 0;         # should the 'preference' slider be disabled?
-my $mode         = 'light';   # light/dark or dry/wet mode?
+my $running           = 0;       # is the simulation running?
+my $counter           = 0;       # seconds since simulation was started
+my $paused            = 0;       # is the simulation paused?
+my $dry               = 0;       # dry/damp mode on?
+my $light             = 1;       # light/dark mode on?
+my $supress_refresh   = 1;       # when we start up the we don't refresh
+my $mode              = 'light'; # default mode
 
 my %mode = 
 (
-	dry              => 
+	none                    =>
 	{
-		left_text    => 'Dry', 
-		right_text   => 'Wet', 
-		left_colour  => '#C1B24E', 
-		right_colour => '#7695EF',
-	},
-	light            => 
+		fill =>
+		[
+			[ '#7DDE4D', '#7DDE4D' ],
+			[ '#7DDE4D', '#7DDE4D' ],
+		],
+		prefs => [ 1, 1 ],
+	},	
+	dry                     => 
 	{
-		left_text    => 'Light', 
-		right_text   => 'Dark', 
-		left_colour  => 'white', 
-		right_colour => 'gray',
+		fill =>
+		[
+			[ '#C1B24E', '#C1B24E' ],
+			[ '#7695EF', '#7695EF' ],
+		],
+		prefs => [ 1, 7 ],
 	},
+	light                   => 
+	{
+		fill =>
+		[
+			[ 'white', 'gray' ],
+			[ 'white', 'gray' ],
+		],
+		prefs => [ 1000, 1 ],
+	},
+	both                    =>
+	{
+		fill =>
+		[
+			[ '#F6D388', '#705824' ],
+			[ '#B7C8DB', '#215187' ],
+		],		
+		prefs => [ 1000, 7 ],
+	}
 );
 
 ################################# defaults #####################################
 
-my $preference   = 100;
-my $population   = 10;
+my $population   = 20;
 my $critters     = 'woodlice';
-my $vert         = 400;
-my $horiz        = 780;
+my $vert         = 500;
+my $horiz        = 500;
 my $speed        = 0.006;
 my $refresh      = 20;         # milliseconds between refreshes
 
 ################################ gui settings ##################################
 
 my $background   = 'gray';
-my $foreground   = '#8445e3';
+my $foreground   = '#B65DE9';
 my %menu_opt     =
 (
 	# settings for cascaded menu items
@@ -65,7 +87,7 @@ my %label_opt    =
 (
 	# options for text labels
 	-font        => 'sserif 14', 
-	-width       => 10, 
+	-width       => 12, 
 	-borderwidth => 2, 
 	-relief      => 'groove',
 );
@@ -101,7 +123,6 @@ GetOptions
 	"image=s"      => \$critters,
 	"refresh=i"    => \$refresh,
 	"speed=f"      => \$speed,
-	"disabled"     => \$disabled,
 );
 
 $refresh /= 1000; # Time::HiRes need seconds, not milliseconds
@@ -121,7 +142,7 @@ my $log_number = 1;
 
 ############################# keyboard bindings ################################
 
-my $mw = new MainWindow( -title => "Woodlouse simulator" );
+my $mw = new MainWindow( -title => "Woodlouse simulator (CASE 19)" );
 $mw->Tk::bind( '<Alt-F4>'     => [ sub { Tk::exit 0 } ] );
 $mw->Tk::bind( '<Control-F4>' => [ sub { Tk::exit 0 } ] );
 $mw->Tk::bind( '<Control-s>'  => \&start_toggle );
@@ -207,44 +228,86 @@ $mw->setPalette( $foreground );
 
 ################################## simulation ##################################
 	
+	my %counters;
 	my $main = $mw->Frame( -background => $background )->pack();
+		
+		$counters{ top_left } = $main->Label
+		( 
+			%label_opt,
+		)
+		->grid
+		(
+			-column   => 0, 
+			-row      => 0, 
+			%wide_pad_opt,
+		);
+		
 		my $taxis_frame = $main->Frame
 		(
 			%frame_opt,
 		)
-		->pack
+		->grid
 		(
+			-column    => 1,
+			-row       => 0,
+			-rowspan   => 2,
 			%pad_opt,
 		);
-		my $taxis = $taxis_frame->Taxis
+			my $taxis = $taxis_frame->Taxis
+			( 
+				-width      => $horiz,
+				-height     => $vert,
+				-preference => $mode{$mode}{prefs},
+				-fill       => $mode{$mode}{fill},
+				-population => $population,
+				-images     => $critters,
+				-speed      => $speed,
+			)
+			->pack();
+		
+		$counters{ top_right } = $main->Label
 		( 
-			-width      => $horiz,
-			-height     => $vert,
-			-preference => $preference,
-			-population => $population,
-			-images     => $critters,
-			-speed      => $speed,
+			%label_opt,
 		)
-		->pack();
+		->grid
+		(
+			-column   => 2, 
+			-row      => 0, 
+			%wide_pad_opt,
+		);
+
+		$counters{ bottom_left } = $main->Label
+		( 
+			%label_opt,
+		)
+		->grid
+		(
+			-column   => 0, 
+			-row      => 1, 
+			%wide_pad_opt,
+		);
+
+		$counters{ bottom_right } = $main->Label
+		( 
+			%label_opt,
+		)
+		->grid
+		(
+			-column   => 2, 
+			-row      => 1, 
+			%wide_pad_opt,
+		);
+		
 		my $frame = $main->Frame
 		(
 			%frame_opt,
 		)
-		->pack
+		->grid
 		(
-			%pad_opt,
+			-column   => 1, 
+			-row      => 2, 
+			%wide_pad_opt,
 		);
-			my $left_count = $frame->Label
-			( 
-				%label_opt,
-			)
-			->grid
-			(
-				-column   => 1, 
-				-row      => 0, 
-				-sticky   => 'ns',
-				%wide_pad_opt,
-			);
 			my $start_button = $frame->Button
 			( 
 				-text     => "Start",
@@ -253,7 +316,7 @@ $mw->setPalette( $foreground );
 			)
 			->grid
 			(
-				-column   => 2, 
+				-column   => 0, 
 				-row      => 0,
 				%wide_pad_opt,
 			);
@@ -267,7 +330,7 @@ $mw->setPalette( $foreground );
 			)
 			->grid
 			(
-				-column   => 3, 
+				-column   => 1, 
 				-row      => 0, 
 				%wide_pad_opt,
 			);
@@ -278,21 +341,10 @@ $mw->setPalette( $foreground );
 			)
 			->grid
 			(
-				-column   => 4, 
+				-column   => 2, 
 				-row      => 0, 
 				-sticky   => 'ns',
 				%wide_pad_opt, 
-			);
-			my $right_count = $frame->Label
-			( 
-				%label_opt,
-			)
-			->grid
-			(
-				-column   => 5, 
-				-row      => 0, 
-				-sticky   => 'ns',
-				%wide_pad_opt,
 			);
 	
 ################################## event loop ##################################
@@ -305,8 +357,23 @@ $mw->repeat
 		{ 
 			if ( $running && not $paused )
 			{
-				my ( $left, $right ) = $taxis->cget( -population );
-				print $logfile "$counter\t$left\t$right\n";
+				my %c = $taxis->cget( -population );
+				if ( $light && $dry )
+				{
+					print $logfile "$counter\t$c{top_left}\t$c{bottom_left}\t$c{top_right}\t$c{bottom_right}\n";
+				}
+				elsif ( $dry )
+				{
+					print $logfile "$counter\t$c{top}\t$c{bottom}\n"
+				}
+				elsif ( $light )
+				{
+					print $logfile "$counter\t$c{left}\t$c{right}\n"
+				}
+				else
+				{
+					print $logfile "$counter\t$c{top_left}\t$c{bottom_left}\t$c{top_right}\t$c{bottom_right}\n";
+				}
 				$counter++;
 			}
 		}
@@ -321,9 +388,37 @@ while( 1 )
 		$taxis->taxis();
 		$timer->configure( -text => sprintf "Time (s): %u", $counter );
 	}
-	my ( $left, $right ) = $taxis->cget( -population );
-	$left_count->configure(  -text => "$mode{$mode}{left_text}: $left"  );
-	$right_count->configure( -text => "$mode{$mode}{right_text}: $right" );
+	my %c = $taxis->cget( -population );
+	
+	if ( $light && $dry )
+	{
+		$counters{top_left}->configure(     -text => "Light/Dry : $c{top_left}" );
+		$counters{bottom_left}->configure(  -text => "Light/Damp : $c{bottom_left}" );
+		$counters{top_right}->configure(    -text => "Dark/Dry : $c{top_right}" );
+		$counters{bottom_right}->configure( -text => "Dark/Damp : $c{bottom_right}" );
+	}
+	elsif ( $dry )
+	{
+		$counters{top_left}->configure(     -text => "Dry : $c{top}" );
+		$counters{bottom_left}->configure(  -text => "Damp : $c{bottom}" );
+		$counters{top_right}->configure(    -text => "" );
+		$counters{bottom_right}->configure( -text => "" );
+	}
+	elsif ( $light )
+	{
+		$counters{top_left}->configure(     -text => "Light : $c{left}" );
+		$counters{bottom_left}->configure(  -text => "" );
+		$counters{top_right}->configure(    -text => "Dark : $c{right}" );
+		$counters{bottom_right}->configure( -text => "" );
+	}
+	else
+	{
+		$counters{top_left}->configure(     -text => "$c{top_left}" );
+		$counters{bottom_left}->configure(  -text => "$c{bottom_left}" );
+		$counters{top_right}->configure(    -text => "$c{top_right}" );
+		$counters{bottom_right}->configure( -text => "$c{bottom_right}" );
+	}
+
 	while ( Time::HiRes::time < $finish  )
 	{ 
 		DoOneEvent( DONT_WAIT );
@@ -347,29 +442,6 @@ sub options
 		-background => $background,
 		-title      => "Options",
 	);
-	my $preference_frame = $option_box->Frame
-	(
-		-borderwidth  => 2,
-		-relief       => 'groove',
-		-background   => $background,
-	);
-	my $preference_scale = $preference_frame->Scale
-	(
-		-label        => "Preference",
-		-from         => -100, 
-		-to           => 100, 
-		-tickinterval => 50,
-		%scale_opt,
-	);
-	$preference_scale->set( $preference );
-	$preference_scale->pack();
-	$disabled || $preference_frame->grid
-	(
-		-column       => 1, 
-		-row          => 1, 
-		-columnspan   => 2, 
-		%pad_opt,
-	);
 	
 	my $population_frame = $option_box->Frame
 	(
@@ -388,7 +460,7 @@ sub options
 	$population_frame->grid
 	(	
 		-column       => 1, 
-		-row          => 2, 
+		-row          => 1, 
 		-columnspan   => 2, 
 		%pad_opt,
 	);
@@ -400,15 +472,14 @@ sub options
 	->grid
 	(	
 		-column       => 1, 
-		-row          => 3, 
+		-row          => 2, 
 		-columnspan   => 2, 
 		%pad_opt,
 	);	
-	my $light_button  = $mode_frame->Radiobutton
+	my $light_button  = $mode_frame->Checkbutton
 	(
 		-text         => "Light/Dark",
-		-variable     => \$mode,
-		-value        => 'light',
+		-variable     => \$light,
 		-selectcolor  => $background,
 		%label_opt,
 	)
@@ -418,11 +489,10 @@ sub options
 		-row          => 1,
 		%pad_opt,		
 	);
-	my $dry_button    = $mode_frame->Radiobutton
+	my $dry_button    = $mode_frame->Checkbutton
 	(
-		-text         => "Dry/Wet",
-		-variable     => \$mode,
-		-value        => 'dry',
+		-text         => "Dry/Damp",
+		-variable     => \$dry,
 		-selectcolor  => $background,
 		%label_opt,
 	)
@@ -440,23 +510,38 @@ sub options
 		-command      => [
 						sub
 						{
-							$preference = $preference_scale->get();
 							$population = $population_scale->get();
-							$need_reset = 1;
 							$taxis->configure( -population => $population ); 
-							$taxis->configure( -preference => $preference );
-							$taxis->configure
-								( -left_fill  => $mode{$mode}{left_colour} ); 
-							$taxis->configure
-								( -right_fill => $mode{$mode}{right_colour} ); 
+							if ( $light && $dry )
+							{
+								$taxis->configure( -fill => $mode{both}{fill} );
+								$taxis->configure( -preference => $mode{both}{prefs} );
+							}
+							elsif ( $dry )
+							{
+								$taxis->configure( -fill => $mode{dry}{fill} );
+								$taxis->configure( -preference => $mode{dry}{prefs} );
+							}
+							elsif ( $light )
+							{
+								$taxis->configure( -fill => $mode{light}{fill} );
+								$taxis->configure( -preference => $mode{light}{prefs} );
+							}
+							else
+							{
+								$taxis->configure( -fill => $mode{none}{fill} );
+								$taxis->configure( -preference => $mode{none}{prefs} );
+							}							
 							$option_box->destroy();
+							$taxis->refresh();
+							$supress_refresh = 1;
 						}
 					],
 		-width        => 10,
 	)->grid
 	(
 		-column       => 1,
-		-row          => 4, 
+		-row          => 3, 
 		%pad_opt,
 	);
 	my $cancel = $option_box->Button
@@ -473,7 +558,7 @@ sub options
 					
 	)->grid(
 		-column       => 2, 
-		-row          => 4,
+		-row          => 3,
 		%pad_opt,
 	);
 	$option_box->raise();
@@ -496,12 +581,15 @@ sub start_toggle
 		$counter = 0;
 		$paused  = 0;
 		$running = 1;
-		new_log();
-		unless ( $need_reset-- )
+		if ( $supress_refresh )
 		{
-			$taxis->configure( -population => $population );
-			$taxis->configure( -preference => $preference );
+			$supress_refresh = 0;
 		}
+		else
+		{
+			$taxis->refresh();
+		}
+		new_log();
 	}
 	$start_button->configure
 	(
@@ -555,12 +643,11 @@ attractive than bacteria, which certainly do. To start a new simulation, press
 the 'Start' button. To pause it temporarily, press the 'Pause' button.\n
 When the simulation is stopped, options can also be set using 'Options' on the 
 'Simulate' menu. The population can be varied from 1 to 50 using the slider, 
-and the critters' preference can be varied from 0 to +/-100. The preference 
-tells the woodlice how much they want to go to the dark side: a preference of 0 
-indicates no preference at all, and negative preferences will make the woodlice 
-veer away from the dark!\n
-A log is kept of the current option settings and the number of critters on the 
-left and right sides, every second. This can be saved using 'Save log file' on 
+and the critters' preference can be varied from 0 to +/-100.\n
+The simulator can run damp vs. dry, dark vs. light, neither or both at the same
+time. These options can be configured from the options menu.\n
+A log is kept of the current option settings and the number of critters in the 
+four quadrants, every second. This can be saved using 'Save log file' on 
 'File' toolbar when the simulation is stopped.\n
 Keyboard shortcuts:\n
 \tF1\tHelp
@@ -675,7 +762,8 @@ sub dialog
 sub about
 {
 	my $about_text = << "THIS";
-Woodlouse Simulator © Dr. Cook 2003\n
+Woodlouse Simulator (CASE 19) v2.0 © Dr. Cook 2003\n
+Written originally for the Ellen Wilkinson School, Ealing\n
 This is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
 THIS
 	dialog( $about_text, "About" );
@@ -714,9 +802,23 @@ sub new_log
 	print    $logfile <<"THIS";
 Woodlouse simulator log file
 Population\t$population
-Preference\t$preference
-Time\t$mode{$mode}{left_text}\t$mode{$mode}{right_text}
 THIS
+	if ( $light && $dry )
+	{
+		print $logfile "Time\tLight/Dry\tLight/Damp\tDark/Dry\tDark/Damp\n";
+	}
+	elsif ( $dry )
+	{
+		print $logfile "Time\tDry\tDamp\n";
+	}
+	elsif ( $light )
+	{
+		print $logfile "Time\tLight\tDark\n";
+	}
+	else
+	{
+		print $logfile "Time\tTop Left\tBottom Left\tTop Right\tBottom Right\n";
+	}
 }
 
 __END__
@@ -735,7 +837,6 @@ woodlice.pl - Perl script for running woodlouse simulator
     [--image bacteria] 
     [--speed 0.006]
     [--refresh 50]
-    [--disabled]
 
 =head1 ABSTRACT
 
@@ -752,9 +853,9 @@ configured from the command line with the appropriate switches. The 'preference'
 option slider can also be C<disabled> from the command line.
 
 The simulation allows you to run up to fifty woodlouse critters in a light/dark
-choice chamber, print results to a log file, configure the lice's preference
-for the dark side, I<etc>. It was designed (as was the whole distribution) to
-teach school-children about the preference of woodlice for the dark, without
+choice chamber, print results to a log file, simulate woodlice's preference for
+the dark, damp or both. It was designed (as was the whole distribution) to
+teach school-children about the preference of woodlice for damp dark, without
 having to collect two thousand woodlice from the school grounds. I hope some
 biologists or teachers out there may also find it saves getting your hands dirty
 rooting around under rocks.

@@ -32,3 +32,13 @@ Revision history for Perl extension Tk::Taxis.
 	- Improvements to simulator script: dry/wet option, scalable GUI settings,
 	  disable option for preference slider
 	- Changed stochastic test in 1.t
+
+2.00 Wed Nov 19 10:14:06 2003
+	- New internals for Tk::Critter and Tk::Taxis to allow a 2D choice chamber
+	- Changes to API for 2D selection, all but population backward compatible.
+	  Calls to population now return a hash in list context, not a two item list
+	- Removed preference slider from simulator
+	- Allows users to enter their own tumble calculation code 
+	- Complete overhaul of simulator script: dry/damp can be combined with 
+	  dark/light option
+	- Many more tests
