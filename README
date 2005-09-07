@@ -1,4 +1,4 @@
-Tk/Taxis version 2.02
+Tk/Taxis version 2.03
 =====================
 
 This module is a composite widget: a framed canvas with critter images that 
@@ -34,8 +34,8 @@ This module requires these other modules and libraries:
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2003 Steve Cook
+Copyright (C) 2005 by Steve Cook
 
 This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself. 
-
+it under the same terms as Perl itself, either Perl version 5.8.2 or,
+at your option, any later version of Perl 5 you may have available.

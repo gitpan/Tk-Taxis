@@ -49,4 +49,6 @@ Revision history for Perl extension Tk::Taxis.
 
 2.02 Sun Dec 21 11:15:05 2003
 	- Minor test bug fixes discovered when running under 5.8.1. 
-	
+
+2.03  Wed Sep  7 21:44:20 2005
+	- Release for perl 5.8.6.
